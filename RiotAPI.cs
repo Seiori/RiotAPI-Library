@@ -140,7 +140,7 @@ public enum ChallengeLevel
 
 #endregion
 
-static class RiotAPI
+public static class RiotAPI
 {
     private static HttpClient Client = new HttpClient();
     private static HttpClient ClientWithAuth = new HttpClient();
