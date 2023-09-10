@@ -1,147 +1,147 @@
 ﻿using System.Net.Http.Headers;
 
-#region ENUMS
-
-public enum Platform
-{
-    BR1,
-    EUN1,
-    EUW1,
-    JP1,
-    KR,
-    LA1,
-    LA2,
-    NA1,
-    OC1,
-    PH2,
-    RU,
-    SG2,
-    TH2,
-    TR1,
-    TW2,
-    VN2
-}
-
-public enum Region
-{
-    AMERICAS,
-    ASIA,
-    ESPORTS,
-    EUROPE,
-    SEA
-}
-
-public enum ValRegion
-{
-    AP,
-    BR,
-    ESPORTS,
-    EU,
-    KR,
-    LATAM,
-    NA
-}
-
-public enum Locale
-{
-    cs_CZ,
-    el_GR,
-    pl_PL,
-    ro_RO,
-    hu_HU,
-    en_GB,
-    de_DE,
-    es_ES,
-    it_IT,
-    fr_FR,
-    ja_JP,
-    ko_KR,
-    es_MX,
-    es_AR,
-    pt_BR,
-    en_US,
-    en_AU,
-    ru_RU,
-    tr_TR,
-    ms_MY,
-    en_PH,
-    en_SG,
-    th_TH,
-    vn_VN,
-    id_ID,
-    zh_MY,
-    zh_CN,
-    zh_TW
-}
-
-public enum Game
-{
-    val,
-    lor
-}
-
-public enum Queue
-{
-    RANKED_SOLO_5x5,
-    RANKED_TFT,
-    RANKED_FLEX_SR,
-    RANKED_FLEX_TT
-}
-
-public enum ValQueue
-{
-    competitive,
-    unrated,
-    spikerush,
-    tournamentmode,
-    deathmatch,
-    onefa,
-    ggteam
-}
-
-public enum Tier
-{
-    IRON,
-    BRONZE,
-    SILVER,
-    GOLD,
-    PLATINUM,
-    EMERALD,
-    DIAMOND,
-    MASTER,
-    GRANDMASTER,
-    CHALLENGER
-}
-
-public enum Division
-{
-    I,
-    II,
-    III,
-    IV
-}
-
-public enum ChallengeLevel
-{
-    NONE,
-    IRON,
-    BRONZE,
-    SILVER,
-    GOLD,
-    PLATINUM,
-    DIAMOND,
-    MASTER,
-    GRANDMASTER,
-    CHALLENGER,
-    HIGHEST_NOT_LEADERBOARD_ONLY,
-    HIGHEST,
-    LOWEST
-}
-
-#endregion
-
 public static class RiotAPI
 {
+    #region ENUMS
+
+    public enum Platform
+    {
+        BR1,
+        EUN1,
+        EUW1,
+        JP1,
+        KR,
+        LA1,
+        LA2,
+        NA1,
+        OC1,
+        PH2,
+        RU,
+        SG2,
+        TH2,
+        TR1,
+        TW2,
+        VN2
+    }
+
+    public enum Region
+    {
+        AMERICAS,
+        ASIA,
+        ESPORTS,
+        EUROPE,
+        SEA
+    }
+
+    public enum ValRegion
+    {
+        AP,
+        BR,
+        ESPORTS,
+        EU,
+        KR,
+        LATAM,
+        NA
+    }
+
+    public enum Locale
+    {
+        cs_CZ,
+        el_GR,
+        pl_PL,
+        ro_RO,
+        hu_HU,
+        en_GB,
+        de_DE,
+        es_ES,
+        it_IT,
+        fr_FR,
+        ja_JP,
+        ko_KR,
+        es_MX,
+        es_AR,
+        pt_BR,
+        en_US,
+        en_AU,
+        ru_RU,
+        tr_TR,
+        ms_MY,
+        en_PH,
+        en_SG,
+        th_TH,
+        vn_VN,
+        id_ID,
+        zh_MY,
+        zh_CN,
+        zh_TW
+    }
+
+    public enum Game
+    {
+        val,
+        lor
+    }
+
+    public enum Queue
+    {
+        RANKED_SOLO_5x5,
+        RANKED_TFT,
+        RANKED_FLEX_SR,
+        RANKED_FLEX_TT
+    }
+
+    public enum ValQueue
+    {
+        competitive,
+        unrated,
+        spikerush,
+        tournamentmode,
+        deathmatch,
+        onefa,
+        ggteam
+    }
+
+    public enum Tier
+    {
+        IRON,
+        BRONZE,
+        SILVER,
+        GOLD,
+        PLATINUM,
+        EMERALD,
+        DIAMOND,
+        MASTER,
+        GRANDMASTER,
+        CHALLENGER
+    }
+
+    public enum Division
+    {
+        I,
+        II,
+        III,
+        IV
+    }
+
+    public enum ChallengeLevel
+    {
+        NONE,
+        IRON,
+        BRONZE,
+        SILVER,
+        GOLD,
+        PLATINUM,
+        DIAMOND,
+        MASTER,
+        GRANDMASTER,
+        CHALLENGER,
+        HIGHEST_NOT_LEADERBOARD_ONLY,
+        HIGHEST,
+        LOWEST
+    }
+
+    #endregion
+
     private static HttpClient Client = new HttpClient();
     private static HttpClient ClientWithAuth = new HttpClient();
     public static string? APIKey { get; set; }
