@@ -5,6 +5,26 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
     <GeneratePackageOnBuild>True</GeneratePackageOnBuild>
+    <Title>C# RiotAPI Library</Title>
+    <Company>$(Authors)</Company>
+    <Description>Simple C# Library to interact with all the Riot API End Points Currently Accessible</Description>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
+    <RepositoryUrl>https://github.com/Seiori/RiotAPI-Library</RepositoryUrl>
+    <PackageTags>C#; RiotAPI; LeagueofLegends</PackageTags>
+    <PackageReleaseNotes>Implemented Methods to Cover all Riot API Endpoints</PackageReleaseNotes>
+    <PackAsTool>False</PackAsTool>
+    <PackageId>Seiori.RiotAPI</PackageId>
+    <PackageLicenseExpression>OSL-3.0</PackageLicenseExpression>
+    <PackageRequireLicenseAcceptance>False</PackageRequireLicenseAcceptance>
+    <EnforceCodeStyleInBuild>True</EnforceCodeStyleInBuild>
+    <RepositoryType>git</RepositoryType>
   </PropertyGroup>
+
+  <ItemGroup>
+    <None Update="README.md">
+      <Pack>True</Pack>
+      <PackagePath>\</PackagePath>
+    </None>
+  </ItemGroup>
 
 </Project>
