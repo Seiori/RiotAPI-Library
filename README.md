@@ -1,1 +1,1 @@
-# RiotAPI
+# C# Riot API Library
