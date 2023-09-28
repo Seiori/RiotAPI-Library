@@ -817,7 +817,7 @@ public static class RiotAPI
             if (type != null)
                 APIUrl += $"type={type}&";
             if (startingPoint != 0)
-                APIUrl += $"start=0&";
+                APIUrl += $"start={startingPoint}&";
             if (numOfGames != 0)
                 APIUrl += $"count={numOfGames}&";
 
