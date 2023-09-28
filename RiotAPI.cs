@@ -783,6 +783,10 @@ public static class RiotAPI
                 APIUrl += $"queue={queue}&";
             if (type != null)
                 APIUrl += $"type={type}&";
+            if (startingPoint != 0)
+                APIUrl += $"start=0&";
+            if (numOfGames != 0)
+                APIUrl += $"count={numOfGames}&";
 
             return Request(APIUrl + "&api_key=").Result;
         }
@@ -812,6 +816,10 @@ public static class RiotAPI
                 APIUrl += $"queue={queue}&";
             if (type != null)
                 APIUrl += $"type={type}&";
+            if (startingPoint != 0)
+                APIUrl += $"start=0&";
+            if (numOfGames != 0)
+                APIUrl += $"count={numOfGames}&";
 
             return await Request(APIUrl + "&api_key=");
         }
