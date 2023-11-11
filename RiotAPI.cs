@@ -1,5 +1,4 @@
 ﻿using System.Net.Http.Headers;
-using static RiotAPI;
 
 public static class RiotAPI
 {
