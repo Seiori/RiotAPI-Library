@@ -568,7 +568,7 @@ public static class RiotAPI
                 APIUrl += "&";
             }
 
-            return Request(APIUrl + "api_key=").Result;
+            return await Request(APIUrl + "api_key=");
         }
 
         public static async Task<string> GetMatchesbyMatchID(Region region, string matchID)
