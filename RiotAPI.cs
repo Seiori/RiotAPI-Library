@@ -1,4 +1,5 @@
 ﻿using System.Net.Http.Headers;
+using static RiotAPI;
 
 public static class RiotAPI
 {
@@ -144,8 +145,7 @@ public static class RiotAPI
 
     #region ClassVariables
 
-    private static HttpClient Client = new HttpClient();
-    private static HttpClient ClientWithAuth = new HttpClient();
+    private static readonly HttpClient Client = new HttpClient();
     public static string? APIKey { get; set; }
 
     #endregion
@@ -154,13 +154,22 @@ public static class RiotAPI
 
     public static Task<string> Request(string APIUrl, string? accessToken = null)
     {
-        if (accessToken == null)
-            return Client.GetStringAsync(APIUrl + APIKey);
-        else
+        Client.DefaultRequestHeaders.Clear();
+
+        try
         {
-            // Add an Authorisation header to the GET request containing the access token
-            ClientWithAuth.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Authorization", accessToken);
-            return Client.GetStringAsync(APIUrl);
+            if (accessToken == null)
+                return Client.GetStringAsync(APIUrl + APIKey);
+            else
+            {
+                // Add an Authorisation header to the GET request containing the access token
+                Client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Authorization", accessToken);
+                return Client.GetStringAsync(APIUrl);
+            }
+        }
+        catch (Exception ex)
+        {
+            return Task.FromResult(ex.Message);
         }
     }
 
@@ -237,29 +246,6 @@ public static class RiotAPI
 
     #region Account-V1
 
-    public static class AccountV1
-    {
-        public static string GetAccountByPUUID(Region region, string puuid)
-        {
-            return Request($"https://{region}.api.riotgames.com/riot/account/v1/accounts/by-puuid/{puuid}?api_key=").Result;
-        }
-
-        public static string GetAccountByRiotID(Region region, string gameName, string tagLine)
-        {
-            return Request($"https://{region}.api.riotgames.com/riot/account/v1/accounts/by-riot-id/{gameName}/{tagLine}?api_key=").Result;
-        }
-
-        public static string GetAccountByAccessToken(Region region, string accessToken)
-        {
-            return Request($"https://{region}.api.riotgames.com/riot/account/v1/accounts/me?api_key=").Result;
-        }
-
-        public static string GetActiveByPUUID(Region region, Game game, string puuid)
-        {
-            return Request($"https://{region}.api.riotgames.com/riot/account/v1/active-shards/by-game/{game}/by-puuid/{puuid}?api_key=").Result;
-        }
-    }
-
     public static class AccountV1Async
     {
         public static async Task<string> GetAccountByPUUID(Region region, string puuid)
@@ -274,7 +260,7 @@ public static class RiotAPI
 
         public static async Task<string> GetAccountByAccessToken(Region region, string accessToken)
         {
-            return await Request($"https://{region}.api.riotgames.com/riot/account/v1/accounts/me?api_key=");
+            return await Request($"https://{region}.api.riotgames.com/riot/account/v1/accounts/me?api_key=", accessToken);
         }
 
         public static async Task<string> GetActiveByPUUID(Region region, Game game, string puuid)
@@ -287,97 +273,50 @@ public static class RiotAPI
 
     #region Champion-Mastery-V4
 
-    public static class ChampionMasteryV4
-    {
-        public static string GetChampionMasteryByPUUID(Platform region, string puuid)
-        {
-            return Request($"https://{region}.api.riotgames.com/lol/champion-mastery/v4/champion-masteries/by-puuid/{puuid}?api_key=").Result;
-        }
-
-        public static string GetChampionMasteryByPUUIDForChampion(Platform region, string puuid, string cid)
-        {
-            return Request($"https://{region}.api.riotgames.com/lol/champion-mastery/v4/champion-masteries/by-puuid/{puuid}/by-champion/{cid}?api_key=").Result;
-        }
-
-        public static string GetChampionMasteryByPUUIDTop(Platform region, string puuid, int count = 0)
-        {
-            if (count == 0)
-                return Request($"https://{region}.api.riotgames.com/lol/champion-mastery/v4/champion-masteries/by-puuid/{puuid}/top?api_key=").Result;
-            return Request($"https://{region}.api.riotgames.com/lol/champion-mastery/v4/champion-masteries/by-puuid/{puuid}/top?count={count}&api_key=").Result;
-        }
-
-        public static string GetChampionMasteryBySummonerID(Platform region, string sid)
-        {
-            return Request($"https://{region}.api.riotgames.com/lol/champion-mastery/v4/champion-masteries/by-summoner/{sid}?api_key=").Result;
-        }
-
-        public static string GetChampionMasteryBySummonerIDForChampion(Platform region, string sid, string cid)
-        {
-            return Request($"https://{region}.api.riotgames.com/lol/champion-mastery/v4/champion-masteries/by-summoner/{sid}/by-champion/{cid}?api_key=").Result;
-        }
-
-        public static string GetChampionMasteryBySummonerIDTop(Platform region, string sid, int count = 0)
-        {
-            if (count == 0)
-                return Request($"https://{region}.api.riotgames.com/lol/champion-mastery/v4/champion-masteries/by-summoner/{sid}/top&api_key=").Result;
-            return Request($"https://{region}.api.riotgames.com/lol/champion-mastery/v4/champion-masteries/by-summoner/{sid}/top?count={count}&api_key=").Result;
-        }
-
-        public static string GetChampionMasteryScoreByPUUID(Platform region, string PUUID)
-        {
-            return Request($"https://{region}.api.riotgames.com/lol/champion-mastery/v4/scores/by-puuid/{PUUID}?api_key=").Result;
-        }
-
-        public static string GetChampionMasteryScoreBySummonerID(Platform region, string sid)
-        {
-            return Request($"https://{region}.api.riotgames.com/lol/champion-mastery/v4/scores/by-summoner/{sid}?api_key=").Result;
-        }
-    }
-
     public static class ChampionMasteryV4Async
     {
-        public static async Task<string> GetChampionMasteryByPUUID(Platform region, string puuid)
+        public static async Task<string> GetChampionMasteryByPUUID(Platform platform, string puuid)
         {
-            return await Request($"https://{region}.api.riotgames.com/lol/champion-mastery/v4/champion-masteries/by-puuid/{puuid}?api_key=");
+            return await Request($"https://{platform}.api.riotgames.com/lol/champion-mastery/v4/champion-masteries/by-puuid/{puuid}?api_key=");
         }
 
-        public static async Task<string> GetChampionMasteryByPUUIDForChampion(Platform region, string puuid, string cid)
+        public static async Task<string> GetChampionMasteryByPUUIDForChampion(Platform platform, string puuid, string cid)
         {
-            return await Request($"https://{region}.api.riotgames.com/lol/champion-mastery/v4/champion-masteries/by-puuid/{puuid}/by-champion/{cid}?api_key=");
+            return await Request($"https://{platform}.api.riotgames.com/lol/champion-mastery/v4/champion-masteries/by-puuid/{puuid}/by-champion/{cid}?api_key=");
         }
 
-        public static async Task<string> GetChampionMasteryByPUUIDTop(Platform region, string puuid, int count = 0)
+        public static async Task<string> GetChampionMasteryByPUUIDTop(Platform platform, string puuid, int count = 0)
         {
             if (count == 0)
-                return await Request($"https://{region}.api.riotgames.com/lol/champion-mastery/v4/champion-masteries/by-puuid/{puuid}/top?api_key=");
-            return await Request($"https://{region}.api.riotgames.com/lol/champion-mastery/v4/champion-masteries/by-puuid/{puuid}/top?count={count}&api_key=");
+                return await Request($"https://{platform}.api.riotgames.com/lol/champion-mastery/v4/champion-masteries/by-puuid/{puuid}/top?api_key=");
+            return await Request($"https://{platform}.api.riotgames.com/lol/champion-mastery/v4/champion-masteries/by-puuid/{puuid}/top?count={count}&api_key=");
         }
 
-        public static async Task<string> GetChampionMasteryBySummonerID(Platform region, string sid)
+        public static async Task<string> GetChampionMasteryBySummonerID(Platform platform, string sid)
         {
-            return await Request($"https://{region}.api.riotgames.com/lol/champion-mastery/v4/champion-masteries/by-summoner/{sid}?api_key=");
+            return await Request($"https://{platform}.api.riotgames.com/lol/champion-mastery/v4/champion-masteries/by-summoner/{sid}?api_key=");
         }
 
-        public static async Task<string> GetChampionMasteryBySummonerIDForChampion(Platform region, string sid, string cid)
+        public static async Task<string> GetChampionMasteryBySummonerIDForChampion(Platform platform, string sid, string cid)
         {
-            return await Request($"https://{region}.api.riotgames.com/lol/champion-mastery/v4/champion-masteries/by-summoner/{sid}/by-champion/{cid}?api_key=");
+            return await Request($"https://{platform}.api.riotgames.com/lol/champion-mastery/v4/champion-masteries/by-summoner/{sid}/by-champion/{cid}?api_key=");
         }
 
-        public static async Task<string> GetChampionMasteryBySummonerIDTop(Platform region, string sid, int count = 0)
+        public static async Task<string> GetChampionMasteryBySummonerIDTop(Platform platform, string sid, int count = 0)
         {
             if (count == 0)
-                return await Request($"https://{region}.api.riotgames.com/lol/champion-mastery/v4/champion-masteries/by-summoner/{sid}/top&api_key=");
-            return await Request($"https://{region}.api.riotgames.com/lol/champion-mastery/v4/champion-masteries/by-summoner/{sid}/top?count={count}&api_key=");
+                return await Request($"https://{platform}.api.riotgames.com/lol/champion-mastery/v4/champion-masteries/by-summoner/{sid}/top&api_key=");
+            return await Request($"https://{platform}.api.riotgames.com/lol/champion-mastery/v4/champion-masteries/by-summoner/{sid}/top?count={count}&api_key=");
         }
 
-        public static async Task<string> GetChampionMasteryScoreByPUUID(Platform region, string PUUID)
+        public static async Task<string> GetChampionMasteryScoreByPUUID(Platform platform, string puuid)
         {
-            return await Request($"https://{region}.api.riotgames.com/lol/champion-mastery/v4/scores/by-puuid/{PUUID}?api_key=");
+            return await Request($"https://{platform}.api.riotgames.com/lol/champion-mastery/v4/scores/by-puuid/{puuid}?api_key=");
         }
 
-        public static async Task<string> GetChampionMasteryScoreBySummonerID(Platform region, string sid)
+        public static async Task<string> GetChampionMasteryScoreBySummonerID(Platform platform, string sid)
         {
-            return await Request($"https://{region}.api.riotgames.com/lol/champion-mastery/v4/scores/by-summoner/{sid}?api_key=");
+            return await Request($"https://{platform}.api.riotgames.com/lol/champion-mastery/v4/scores/by-summoner/{sid}?api_key=");
         }
     }
 
@@ -385,19 +324,11 @@ public static class RiotAPI
 
     #region Champion-V3
 
-    public static class ChampionV3
-    {
-        public static string GetChampionRotation(Platform region)
-        {
-            return Request($"https://{region}.api.riotgames.com/lol/platform/v3/champion-rotations?api_key=").Result;
-        }
-    }
-
     public static class ChampionV3Async
     {
-        public static async Task<string> GetChampionRotation(Platform region)
+        public static async Task<string> GetChampionRotation(Platform platform)
         {
-            return await Request($"https://{region}.api.riotgames.com/lol/platform/v3/champion-rotations?api_key=");
+            return await Request($"https://{platform}.api.riotgames.com/lol/platform/v3/champion-rotations?api_key=");
         }
     }
 
@@ -405,69 +336,36 @@ public static class RiotAPI
 
     #region Clash-V1
 
-    public static class ClashV1
-    {
-        public static string GetClashPlayersByPUUID(Platform region, string PUUID)
-        {
-            return Request($"https://{region}.api.riotgames.com/lol/clash/v1/players/by-puuid/{PUUID}?api_key=").Result;
-        }
-
-        public static string GetClashPlayersBySummonerID(Platform region, string SID)
-        {
-            return Request($"https://{region}.api.riotgames.com/lol/clash/v1/players/by-summoner/{SID}?api_key=").Result;
-        }
-
-        public static string GetClashTeamByTeamID(Platform region, string teamID)
-        {
-            return Request($"https://{region}.api.riotgames.com/lol/clash/v1/teams/{teamID}?api_key=").Result;
-        }
-
-        public static string GetClashTournaments(Platform region)
-        {
-            return Request($"https://{region}.api.riotgames.com/lol/clash/v1/tournaments?api_key=").Result;
-        }
-
-        public static string GetClashTournamentsByTeamID(Platform region, string teamID)
-        {
-            return Request($"https://{region}.api.riotgames.com/lol/clash/v1/tournaments/{teamID}?api_key=").Result;
-        }
-
-        public static string GetClashTournamentsByTournamentID(Platform region, string tournamentID)
-        {
-            return Request($"https://{region}.api.riotgames.com/lol/clash/v1/tournaments/{tournamentID}?api_key=").Result;
-        }
-    }
-
     public static class ClashV1Async
     {
-        public static async Task<string> GetClashPlayersByPUUID(Platform region, string PUUID)
+        public static async Task<string> GetClashPlayersByPUUID(Platform platform, string PUUID)
         {
-            return await Request($"https://{region}.api.riotgames.com/lol/clash/v1/players/by-puuid/{PUUID}?api_key=");
+            return await Request($"https://{platform}.api.riotgames.com/lol/clash/v1/players/by-puuid/{PUUID}?api_key=");
         }
 
-        public static async Task<string> GetClashPlayersBySummonerID(Platform region, string SID)
+        public static async Task<string> GetClashPlayersBySummonerID(Platform platform, string SID)
         {
-            return await Request($"https://{region}.api.riotgames.com/lol/clash/v1/players/by-summoner/{SID}?api_key=");
+            return await Request($"https://{platform}.api.riotgames.com/lol/clash/v1/players/by-summoner/{SID}?api_key=");
         }
 
-        public static async Task<string> GetClashTeamByTeamID(Platform region, string teamID)
+        public static async Task<string> GetClashTeamByTeamID(Platform platform, string teamID)
         {
-            return await Request($"https://{region}.api.riotgames.com/lol/clash/v1/teams/{teamID}?api_key=");
+            return await Request($"https://{platform}.api.riotgames.com/lol/clash/v1/teams/{teamID}?api_key=");
         }
 
-        public static async Task<string> GetClashTournaments(Platform region)
+        public static async Task<string> GetClashTournaments(Platform platform)
         {
-            return await Request($"https://{region}.api.riotgames.com/lol/clash/v1/tournaments?api_key=");
+            return await Request($"https://{platform}.api.riotgames.com/lol/clash/v1/tournaments?api_key=");
         }
 
-        public static async Task<string> GetClashTournamentsByTeamID(Platform region, string teamID)
+        public static async Task<string> GetClashTournamentsByTeamID(Platform platform, string teamID)
         {
-            return await Request($"https://{region}.api.riotgames.com/lol/clash/v1/tournaments/{teamID}?api_key=");
+            return await Request($"https://{platform}.api.riotgames.com/lol/clash/v1/tournaments/{teamID}?api_key=");
         }
 
-        public static async Task<string> GetClashTournamentsByTournamentID(Platform region, string tournamentID)
+        public static async Task<string> GetClashTournamentsByTournamentID(Platform platform, string tournamentID)
         {
-            return await Request($"https://{region}.api.riotgames.com/lol/clash/v1/tournaments/{tournamentID}?api_key=");
+            return await Request($"https://{platform}.api.riotgames.com/lol/clash/v1/tournaments/{tournamentID}?api_key=");
         }
     }
 
@@ -475,19 +373,11 @@ public static class RiotAPI
 
     #region League-Exp-V4
 
-    public static class LeagueExpV4
-    {
-        public static string GetLeaguePlayersByQueueTierDivision(Platform region, Queue queue, Tier tier, Division division)
-        {
-            return Request($"https://{region}.api.riotgames.com/lol/league-exp/v4/entries/{queue}/{tier}/{division}?api_key=").Result;
-        }
-    }
-
     public static class LeagueExpV4Async
     {
-        public static async Task<string> GetLeaguePlayersByQueueTierDivision(Platform region, Queue queue, Tier tier, Division division)
+        public static async Task<string> GetLeaguePlayersByQueueTierDivision(Platform platform, Queue queue, Tier tier, Division division)
         {
-            return await Request($"https://{region}.api.riotgames.com/lol/league-exp/v4/entries/{queue}/{tier}/{division}?api_key=");
+            return await Request($"https://{platform}.api.riotgames.com/lol/league-exp/v4/entries/{queue}/{tier}/{division}?api_key=");
         }
     }
 
@@ -495,142 +385,75 @@ public static class RiotAPI
 
     #region League-V4
 
-    public static class LeagueV4
-    {
-        public static string GetChallengerLeagueByQueue(Platform region, Queue queue)
-        {
-            return Request($"https://{region}.api.riotgames.com/lol/league/v4/challengerleagues/by-queue/{queue}?api_key=").Result;
-        }
-
-        public static string GetLeagueEntriesInAllQueuesBySummonerID(Platform region, string sid)
-        {
-            return Request($"https://{region}.api.riotgames.com/lol/league/v4/entries/by-summoner/{sid}?api_key=").Result;
-        }
-
-        public static string GetLeagueEntriesByQueueTierDivision(Platform region, Queue queue, Tier tier, Division division)
-        {
-            return Request($"https://{region}.api.riotgames.com/lol/league/v4/entries/{queue}/{tier}/{division}?api_key=").Result;
-        }
-
-        public static string GetGrandmasterLeagueByQueue(Platform region, Queue queue)
-        {
-            return Request($"https://{region}.api.riotgames.com/lol/league/v4/grandmasterleagues/by-queue/{queue}?api_key=").Result;
-        }
-
-        public static string GetLeagueByLeagueID(Platform region, string leagueID)
-        {
-            return Request($"https://{region}.api.riotgames.com/lol/league/v4/leagues/{leagueID}?api_key=").Result;
-        }
-
-        public static string GetMasterLeagueByQueue(Platform region, Queue queue)
-        {
-            return Request($"https://{region}.api.riotgames.com/lol/league/v4/masterleagues/by-queue/{queue}?api_key=").Result;
-        }
-    }
-
     public static class LeagueV4Async
     {
-        public static async Task<string> GetChallengerLeagueByQueue(Platform region, Queue queue)
+        public static async Task<string> GetChallengerLeagueByQueue(Platform platform, Queue queue)
         {
-            return await Request($"https://{region}.api.riotgames.com/lol/league/v4/challengerleagues/by-queue/{queue}?api_key=");
+            return await Request($"https://{platform}.api.riotgames.com/lol/league/v4/challengerleagues/by-queue/{queue}?api_key=");
         }
 
-        public static async Task<string> GetLeagueEntriesInAllQueuesBySummonerID(Platform region, string sid)
+        public static async Task<string> GetLeagueEntriesInAllQueuesBySummonerID(Platform platform, string sid)
         {
-            return await Request($"https://{region}.api.riotgames.com/lol/league/v4/entries/by-summoner/{sid}?api_key=");
+            return await Request($"https://{platform}.api.riotgames.com/lol/league/v4/entries/by-summoner/{sid}?api_key=");
         }
 
-        public static async Task<string> GetLeagueEntriesByQueueTierDivision(Platform region, Queue queue, Tier tier, Division division)
+        public static async Task<string> GetLeagueEntriesByQueueTierDivision(Platform platform, Queue queue, Tier tier, Division division)
         {
-            return await Request($"https://{region}.api.riotgames.com/lol/league/v4/entries/{queue}/{tier}/{division}?api_key=");
+            return await Request($"https://{platform}.api.riotgames.com/lol/league/v4/entries/{queue}/{tier}/{division}?api_key=");
         }
 
-        public static async Task<string> GetGrandmasterLeagueByQueue(Platform region, Queue queue)
+        public static async Task<string> GetGrandmasterLeagueByQueue(Platform platform, Queue queue)
         {
-            return await Request($"https://{region}.api.riotgames.com/lol/league/v4/grandmasterleagues/by-queue/{queue}?api_key=");
+            return await Request($"https://{platform}.api.riotgames.com/lol/league/v4/grandmasterleagues/by-queue/{queue}?api_key=");
         }
 
-        public static async Task<string> GetLeagueByLeagueID(Platform region, string leagueID)
+        public static async Task<string> GetLeagueByLeagueID(Platform platform, string leagueID)
         {
-            return await Request($"https://{region}.api.riotgames.com/lol/league/v4/leagues/{leagueID}?api_key=");
+            return await Request($"https://{platform}.api.riotgames.com/lol/league/v4/leagues/{leagueID}?api_key=");
         }
 
-        public static async Task<string> GetMasterLeagueByQueue(Platform region, Queue queue)
+        public static async Task<string> GetMasterLeagueByQueue(Platform platform, Queue queue)
         {
-            return await Request($"https://{region}.api.riotgames.com/lol/league/v4/masterleagues/by-queue/{queue}?api_key=");
+            return await Request($"https://{platform}.api.riotgames.com/lol/league/v4/masterleagues/by-queue/{queue}?api_key=");
         }
     }
 
     #endregion
 
     #region LOL-CHALLENGES-V1
-    public static class LolChallengesV1
-    {
-        public static string GetChallengesConfig(Platform region)
-        {
-            return Request($"https://{region}.api.riotgames.com/lol/challenges/v1/challenges/config?api_key=").Result;
-        }
-
-        public static string GetChallengesPercentiles(Platform region)
-        {
-            return Request($"https://{region}.api.riotgames.com/lol/challenges/v1/challenges/percentiles?api_key=").Result;
-        }
-
-        public static string GetSpecificChallengeConfig(Platform region, long challengeID)
-        {
-            return Request($"https://{region}.api.riotgames.com/lol/challenges/v1/challenges/{challengeID}/config?api_key=").Result;
-        }
-
-        public static string GetChallengesTopPlayersByLevel(Platform region, long challengeID, ChallengeLevel level, int limit = 0)
-        {
-            if (limit == 0)
-                return Request($"https://{region}.api.riotgames.com/lol/challenges/v1/challenges/{challengeID}/top/{level}?api_key=").Result;
-            return Request($"https://{region}.api.riotgames.com/lol/challenges/v1/challenges/{challengeID}/top/{level}?limit={limit}&api_key=").Result;
-        }
-
-        public static string GetSpecificChallengePercentiles(Platform region, long challengeID)
-        {
-            return Request($"https://{region}.api.riotgames.com/lol/challenges/v1/challenges/{challengeID}/percentiles?api_key=").Result;
-        }
-
-        public static string GetPlayerChallengesData(Platform region, string puuid)
-        {
-            return Request($"https://{region}.api.riotgames.com/lol/challenges/v1/player-data/{puuid}?api_key=").Result;
-        }
-    }
 
     public static class LolChallengesV1Async
     {
-        public static async Task<string> GetChallengesConfig(Platform region)
+        public static async Task<string> GetChallengesConfig(Platform platform)
         {
-            return await Request($"https://{region}.api.riotgames.com/lol/challenges/v1/challenges/config?api_key=");
+            return await Request($"https://{platform}.api.riotgames.com/lol/challenges/v1/challenges/config?api_key=");
         }
 
-        public static async Task<string> GetChallengesPercentiles(Platform region)
+        public static async Task<string> GetChallengesPercentiles(Platform platform)
         {
-            return await Request($"https://{region}.api.riotgames.com/lol/challenges/v1/challenges/percentiles?api_key=");
+            return await Request($"https://{platform}.api.riotgames.com/lol/challenges/v1/challenges/percentiles?api_key=");
         }
 
-        public static async Task<string> GetSpecificChallengeConfig(Platform region, long challengeID)
+        public static async Task<string> GetSpecificChallengeConfig(Platform platform, long challengeID)
         {
-            return await Request($"https://{region}.api.riotgames.com/lol/challenges/v1/challenges/{challengeID}/config?api_key=");
+            return await Request($"https://{platform}.api.riotgames.com/lol/challenges/v1/challenges/{challengeID}/config?api_key=");
         }
 
-        public static async Task<string> GetChallengesTopPlayersByLevel(Platform region, long challengeID, ChallengeLevel level, int limit = 0)
+        public static async Task<string> GetChallengesTopPlayersByLevel(Platform platform, long challengeID, ChallengeLevel level, int limit = 0)
         {
             if (limit == 0)
-                return await Request($"https://{region}.api.riotgames.com/lol/challenges/v1/challenges/{challengeID}/top/{level}?api_key=");
-            return await Request($"https://{region}.api.riotgames.com/lol/challenges/v1/challenges/{challengeID}/top/{level}?limit={limit}&api_key=");
+                return await Request($"https://{platform}.api.riotgames.com/lol/challenges/v1/challenges/{challengeID}/top/{level}?api_key=");
+            return await Request($"https://{platform}.api.riotgames.com/lol/challenges/v1/challenges/{challengeID}/top/{level}?limit={limit}&api_key=");
         }
 
-        public static async Task<string> GetSpecificChallengePercentiles(Platform region, long challengeID)
+        public static async Task<string> GetSpecificChallengePercentiles(Platform platform, long challengeID)
         {
-            return await Request($"https://{region}.api.riotgames.com/lol/challenges/v1/challenges/{challengeID}/percentiles?api_key=");
+            return await Request($"https://{platform}.api.riotgames.com/lol/challenges/v1/challenges/{challengeID}/percentiles?api_key=");
         }
 
-        public static async Task<string> GetPlayerChallengesData(Platform region, string puuid)
+        public static async Task<string> GetPlayerChallengesData(Platform platform, string puuid)
         {
-            return await Request($"https://{region}.api.riotgames.com/lol/challenges/v1/player-data/{puuid}?api_key=");
+            return await Request($"https://{platform}.api.riotgames.com/lol/challenges/v1/player-data/{puuid}?api_key=");
         }
     }
 
@@ -638,33 +461,17 @@ public static class RiotAPI
 
     #region LOL-STATUS-V4
 
-    public static class LolStatusV4
-    {
-        public static string GetLeagueStatus(Platform region)
-        {
-            return Request($"https://{region}.api.riotgames.com/lol/status/v4/platform-data?api_key=").Result;
-        }
-    }
-
     public static class LolStatusV4Async
     {
-        public static async Task<string> GetLeagueStatus(Platform region)
+        public static async Task<string> GetLeagueStatus(Platform platform)
         {
-            return await Request($"https://{region}.api.riotgames.com/lol/status/v4/platform-data?api_key=");
+            return await Request($"https://{platform}.api.riotgames.com/lol/status/v4/platform-data?api_key=");
         }
     }
 
     #endregion
 
     #region LOR-DECK-V1
-
-    public static class LorDeckV1
-    {
-        public static string GetDeckListByAccessToken(Region region, string accessToken)
-        {
-            return Request($"https://{region}.api.riotgames.com/lor/deck/v1/decks/me?api_key=", accessToken).Result;
-        }
-    }
 
     public static class LorDeckV1Async
     {
@@ -679,14 +486,6 @@ public static class RiotAPI
 
     #region LOR-INVENTORY-V1
 
-    public static class LorInventoryV1
-    {
-        public static string GetLorInventoryByAccessToken(Region region, string accessToken)
-        {
-            return Request($"https://{region}.api.riotgames.com/lor/inventory/v1/players/me/inventory?api_key=", accessToken).Result;
-        }
-    }
-
     public static class LorInventoryV1Async
     {
         public static async Task<string> GetLorInventoryByAccessToken(Region region, string accessToken)
@@ -698,19 +497,6 @@ public static class RiotAPI
     #endregion
 
     #region LOR-MATCH-V1
-
-    public static class LorMatchV1
-    {
-        public static string GetLorMatchIDsByPUUID(Region region, string PUUID)
-        {
-            return Request($"https://{region}.api.riotgames.com/lor/match/v1/matches/by-puuid/{PUUID}/ids?api_key=").Result;
-        }
-
-        public static string GetLorMatchByMatchID(Region region, string matchID)
-        {
-            return Request($"https://{region}.api.riotgames.com/lor/match/v1/matches/{matchID}?api_key=").Result;
-        }
-    }
 
     public static class LorMatchV1Async
     {
@@ -729,14 +515,6 @@ public static class RiotAPI
 
     #region LOR-RANKED-V1
 
-    public static class LorRankedV1
-    {
-        public static string GetPlayersInMasterTier(Region region)
-        {
-            return Request($"https://{region}.api.riotgames.com/lor/ranked/v1/leaderboards?api_key=").Result;
-        }
-    }
-
     public static class LorRankedV1Async
     {
         public static async Task<string> GetPlayersInMasterTier(Region region)
@@ -748,14 +526,6 @@ public static class RiotAPI
     #endregion
 
     #region LOR-STATUS-V1
-
-    public static class LorStatusV1
-    {
-        public static string GetLorStatus(Region region)
-        {
-            return Request($"https://{region}.api.riotgames.com/lor/status/v1/platform-data?api_key=").Result;
-        }
-    }
 
     public static class LorStatusV1Async
     {
@@ -769,59 +539,36 @@ public static class RiotAPI
 
     #region MATCH-V5
 
-    public static class MatchV5
-    {
-        public static string GetMatchesbyPUUID(Region region, string PUUID, long startTime, long endTime, int queue, string? type, int startingPoint, int numOfGames)
-        {
-            var APIUrl = $"https://{region}.api.riotgames.com/lol/match/v5/matches/by-puuid/{PUUID}/ids?";
-
-            if (startTime != 0)
-                APIUrl += $"startTime={startTime}&";
-            if (endTime != 0)
-                APIUrl += $"endTime={endTime}&";
-            if (queue != 0)
-                APIUrl += $"queue={queue}&";
-            if (type != null)
-                APIUrl += $"type={type}&";
-            if (startingPoint != 0)
-                APIUrl += $"start=0&";
-            if (numOfGames != 0)
-                APIUrl += $"count={numOfGames}&";
-
-            return Request(APIUrl + "&api_key=").Result;
-        }
-
-        public static string GetMatchesbyMatchID(Region region, string matchID)
-        {
-            return Request($"https://{region}.api.riotgames.com/lol/match/v5/matches/{matchID}?api_key=").Result;
-        }
-
-        public static string GetMatchTimelinebyMatchID(Region region, string matchID)
-        {
-            return Request($"https://{region}.api.riotgames.com/lol/match/v5/matches/{matchID}/timeline?api_key=").Result;
-        }
-    }
-
     public static class MatchV5Async
     {
         public static async Task<string> GetMatchesbyPUUID(Region region, string PUUID, long startTime, long endTime, int queue, string? type, int startingPoint, int numOfGames)
         {
             var APIUrl = $"https://{region}.api.riotgames.com/lol/match/v5/matches/by-puuid/{PUUID}/ids?";
 
-            if (startTime != 0)
-                APIUrl += $"startTime={startTime}&";
-            if (endTime != 0)
-                APIUrl += $"endTime={endTime}&";
-            if (queue != 0)
-                APIUrl += $"queue={queue}&";
-            if (type != null)
-                APIUrl += $"type={type}&";
-            if (startingPoint != 0)
-                APIUrl += $"start={startingPoint}&";
-            if (numOfGames != 0)
-                APIUrl += $"count={numOfGames}&";
+            // Add query parameters conditionally
+            var queryParams = new List<string>();
 
-            return await Request(APIUrl + "&api_key=");
+            if (startTime != 0)
+                queryParams.Add($"startTime={startTime}");
+            if (endTime != 0)
+                queryParams.Add($"endTime={endTime}");
+            if (queue != 0)
+                queryParams.Add($"queue={queue}");
+            if (!string.IsNullOrEmpty(type))
+                queryParams.Add($"type={type}");
+            if (startingPoint != 0)
+                queryParams.Add($"start={startingPoint}");
+            if (numOfGames != 0)
+                queryParams.Add($"count={numOfGames}");
+
+            // Combine query parameters
+            if (queryParams.Count > 0)
+            {
+                APIUrl += string.Join("&", queryParams);
+                APIUrl += "&";
+            }
+
+            return Request(APIUrl + "api_key=").Result;
         }
 
         public static async Task<string> GetMatchesbyMatchID(Region region, string matchID)
@@ -839,29 +586,16 @@ public static class RiotAPI
 
     #region SPECTATOR-V4
 
-    public static class SpectatorV4
-    {
-        public static string GetCurrentGameInfoBySummonerID(Platform region, string SID)
-        {
-            return Request($"https://{region}.api.riotgames.com/lol/spectator/v4/active-games/by-summoner/{SID}?api_key=").Result;
-        }
-
-        public static string GetFeaturedGames(Platform region)
-        {
-            return Request($"https://{region}.api.riotgames.com/lol/spectator/v4/featured-games?api_key=").Result;
-        }
-    }
-
     public static class SpectatorV4Async
     {
-        public static async Task<string> GetCurrentGameInfoBySummonerID(Platform region, string SID)
+        public static async Task<string> GetCurrentGameInfoBySummonerID(Platform platform, string SID)
         {
-            return await Request($"https://{region}.api.riotgames.com/lol/spectator/v4/active-games/by-summoner/{SID}?api_key=");
+            return await Request($"https://{platform}.api.riotgames.com/lol/spectator/v4/active-games/by-summoner/{SID}?api_key=");
         }
 
-        public static async Task<string> GetFeaturedGames(Platform region)
+        public static async Task<string> GetFeaturedGames(Platform platform)
         {
-            return await Request($"https://{region}.api.riotgames.com/lol/spectator/v4/featured-games?api_key=");
+            return await Request($"https://{platform}.api.riotgames.com/lol/spectator/v4/featured-games?api_key=");
         }
     }
 
@@ -869,49 +603,26 @@ public static class RiotAPI
 
     #region SUMMONER-V4
 
-    public static class SummonerV4
-    {
-        public static string GetSummonerByAccountID(Platform region, string accountID)
-        {
-            return Request($"https://{region}.api.riotgames.com/lol/summoner/v4/summoners/by-account/{accountID}?api_key=").Result;
-        }
-
-        public static string GetSummonerBySummonerName(Platform region, string summonerName)
-        {
-            return Request($"https://{region}.api.riotgames.com/lol/summoner/v4/summoners/by-name/{summonerName}?api_key=").Result;
-        }
-
-        public static string GetSummonerByPUUID(Platform region, string PUUID)
-        {
-            return Request($"https://{region}.api.riotgames.com/lol/summoner/v4/summoners/by-puuid/{PUUID}?api_key=").Result;
-        }
-
-        public static string GetSummonerBySummonerID(Platform region, string summonerID)
-        {
-            return Request($"https://{region}.api.riotgames.com/lol/summoner/v4/summoners/{summonerID}?api_key=").Result;
-        }
-    }
-
     public static class SummonerV4Async
     {
-        public static async Task<string> GetSummonerByAccountID(Platform region, string accountID)
+        public static async Task<string> GetSummonerByAccountID(Platform platform, string accountID)
         {
-            return await Request($"https://{region}.api.riotgames.com/lol/summoner/v4/summoners/by-account/{accountID}?api_key=");
+            return await Request($"https://{platform}.api.riotgames.com/lol/summoner/v4/summoners/by-account/{accountID}?api_key=");
         }
 
-        public static async Task<string> GetSummonerBySummonerName(Platform region, string summonerName)
+        public static async Task<string> GetSummonerBySummonerName(Platform platform, string summonerName)
         {
-            return await Request($"https://{region}.api.riotgames.com/lol/summoner/v4/summoners/by-name/{summonerName}?api_key=");
+            return await Request($"https://{platform}.api.riotgames.com/lol/summoner/v4/summoners/by-name/{summonerName}?api_key=");
         }
 
-        public static async Task<string> GetSummonerByPUUID(Platform region, string PUUID)
+        public static async Task<string> GetSummonerByPUUID(Platform platform, string PUUID)
         {
-            return await Request($"https://{region}.api.riotgames.com/lol/summoner/v4/summoners/by-puuid/{PUUID}?api_key=");
+            return await Request($"https://{platform}.api.riotgames.com/lol/summoner/v4/summoners/by-puuid/{PUUID}?api_key=");
         }
 
-        public static async Task<string> GetSummonerBySummonerID(Platform region, string summonerID)
+        public static async Task<string> GetSummonerBySummonerID(Platform platform, string summonerID)
         {
-            return await Request($"https://{region}.api.riotgames.com/lol/summoner/v4/summoners/{summonerID}?api_key=");
+            return await Request($"https://{platform}.api.riotgames.com/lol/summoner/v4/summoners/{summonerID}?api_key=");
         }
     }
 
@@ -919,79 +630,41 @@ public static class RiotAPI
 
     #region TFT-LEAGUE-V1
 
-    public static class TFTLeagueV1
-    {
-        public static string GetTFTChallengerLeague(Platform region)
-        {
-            return Request($"https://{region}.api.riotgames.com/tft/league/v1/challenger?api_key=").Result;
-        }
-
-        public static string GetTFTLeagueEntriesBySummonerID(Platform region, string SID)
-        {
-            return Request($"https://{region}.api.riotgames.com/tft/league/v1/entries/by-summoner/{SID}?api_key=").Result;
-        }
-
-        public static string GetTFTLeagueEntriesByTierDivision(Platform region, Tier tier, Division division)
-        {
-            return Request($"https://{region}.api.riotgames.com/tft/league/v1/entries/{tier}/{division}?api_key=").Result;
-        }
-
-        public static string GetTFTGrandmasterLeague(Platform region)
-        {
-            return Request($"https://{region}.api.riotgames.com/tft/league/v1/grandmaster?api_key=").Result;
-        }
-
-        public static string GetTFTLeagueByLeagueID(Platform region, string leagueID)
-        {
-            return Request($"https://{region}.api.riotgames.com/tft/league/v1/leagues/{leagueID}?api_key=").Result;
-        }
-
-        public static string GetTFTMasterLeague(Platform region)
-        {
-            return Request($"https://{region}.api.riotgames.com/tft/league/v1/master?api_key=").Result;
-        }
-
-        public static string GetTFTTopRatedLadderForQueue(Platform region, Queue queue)
-        {
-            return Request($"https://{region}.api.riotgames.com/tft/league/v1/rated-ladders/{queue}?api_key=").Result;
-        }
-    }
-
     public static class TFTLeagueV1Async
     {
-        public static async Task<string> GetTFTChallengerLeague(Platform region)
+        public static async Task<string> GetTFTChallengerLeague(Platform platform)
         {
-            return await Request($"https://{region}.api.riotgames.com/tft/league/v1/challenger?api_key=");
+            return await Request($"https://{platform}.api.riotgames.com/tft/league/v1/challenger?api_key=");
         }
 
-        public static async Task<string> GetTFTLeagueEntriesBySummonerID(Platform region, string SID)
+        public static async Task<string> GetTFTLeagueEntriesBySummonerID(Platform platform, string SID)
         {
-            return await Request($"https://{region}.api.riotgames.com/tft/league/v1/entries/by-summoner/{SID}?api_key=");
+            return await Request($"https://{platform}.api.riotgames.com/tft/league/v1/entries/by-summoner/{SID}?api_key=");
         }
 
-        public static async Task<string> GetTFTLeagueEntriesByTierDivision(Platform region, Tier tier, Division division)
+        public static async Task<string> GetTFTLeagueEntriesByTierDivision(Platform platform, Tier tier, Division division)
         {
-            return await Request($"https://{region}.api.riotgames.com/tft/league/v1/entries/{tier}/{division}?api_key=");
+            return await Request($"https://{platform}.api.riotgames.com/tft/league/v1/entries/{tier}/{division}?api_key=");
         }
 
-        public static async Task<string> GetTFTGrandmasterLeague(Platform region)
+        public static async Task<string> GetTFTGrandmasterLeague(Platform platform)
         {
-            return await Request($"https://{region}.api.riotgames.com/tft/league/v1/grandmaster?api_key=");
+            return await Request($"https://{platform}.api.riotgames.com/tft/league/v1/grandmaster?api_key=");
         }
 
-        public static async Task<string> GetTFTLeagueByLeagueID(Platform region, string leagueID)
+        public static async Task<string> GetTFTLeagueByLeagueID(Platform platform, string leagueID)
         {
-            return await Request($"https://{region}.api.riotgames.com/tft/league/v1/leagues/{leagueID}?api_key=");
+            return await Request($"https://{platform}.api.riotgames.com/tft/league/v1/leagues/{leagueID}?api_key=");
         }
 
-        public static async Task<string> GetTFTMasterLeague(Platform region)
+        public static async Task<string> GetTFTMasterLeague(Platform platform)
         {
-            return await Request($"https://{region}.api.riotgames.com/tft/league/v1/master?api_key=");
+            return await Request($"https://{platform}.api.riotgames.com/tft/league/v1/master?api_key=");
         }
 
-        public static async Task<string> GetTFTTopRatedLadderForQueue(Platform region, Queue queue)
+        public static async Task<string> GetTFTTopRatedLadderForQueue(Platform platform, Queue queue)
         {
-            return await Request($"https://{region}.api.riotgames.com/tft/league/v1/rated-ladders/{queue}?api_key=");
+            return await Request($"https://{platform}.api.riotgames.com/tft/league/v1/rated-ladders/{queue}?api_key=");
         }
     }
 
@@ -999,33 +672,18 @@ public static class RiotAPI
 
     #region TFT-MATCH-V1
 
-    public static class TFTMatchV1
-    {
-        public static string GetTFTMatchIDsByPUUID(Platform region, string PUUID, int count = 0)
-        {
-            if (count == 0)
-                return Request($"https://{region}.api.riotgames.com/tft/match/v1/matches/by-puuid/{PUUID}/ids?api_key=").Result;
-            return Request($"https://{region}.api.riotgames.com/tft/match/v1/matches/by-puuid/{PUUID}/ids?count={count}&api_key=").Result;
-        }
-
-        public static string GetTFTMatchByMatchID(Platform region, string matchID)
-        {
-            return Request($"https://{region}.api.riotgames.com/tft/match/v1/matches/{matchID}?api_key=").Result;
-        }
-    }
-
     public static class TFTMatchV1Async
     {
-        public static async Task<string> GetTFTMatchIDsByPUUID(Platform region, string PUUID, int count = 0)
+        public static async Task<string> GetTFTMatchIDsByPUUID(Platform platform, string PUUID, int count = 0)
         {
             if (count == 0)
-                return await Request($"https://{region}.api.riotgames.com/tft/match/v1/matches/by-puuid/{PUUID}/ids?api_key=");
-            return await Request($"https://{region}.api.riotgames.com/tft/match/v1/matches/by-puuid/{PUUID}/ids?count={count}&api_key=");
+                return await Request($"https://{platform}.api.riotgames.com/tft/match/v1/matches/by-puuid/{PUUID}/ids?api_key=");
+            return await Request($"https://{platform}.api.riotgames.com/tft/match/v1/matches/by-puuid/{PUUID}/ids?count={count}&api_key=");
         }
 
-        public static async Task<string> GetTFTMatchByMatchID(Platform region, string matchID)
+        public static async Task<string> GetTFTMatchByMatchID(Platform platform, string matchID)
         {
-            return await Request($"https://{region}.api.riotgames.com/tft/match/v1/matches/{matchID}?api_key=");
+            return await Request($"https://{platform}.api.riotgames.com/tft/match/v1/matches/{matchID}?api_key=");
         }
     }
 
@@ -1033,19 +691,11 @@ public static class RiotAPI
 
     #region TFT-STATUS-V1
 
-    public static class TFTStatusV1
-    {
-        public static string GetTFTStatus(Platform region)
-        {
-            return Request($"https://{region}.api.riotgames.com/tft/status/v1/platform-data?api_key=").Result;
-        }
-    }
-
     public static class TFTStatusV1Async
     {
-        public static async Task<string> GetTFTStatus(Platform region)
+        public static async Task<string> GetTFTStatus(Platform platform)
         {
-            return await Request($"https://{region}.api.riotgames.com/tft/status/v1/platform-data?api_key=");
+            return await Request($"https://{platform}.api.riotgames.com/tft/status/v1/platform-data?api_key=");
         }
     }
 
@@ -1053,104 +703,37 @@ public static class RiotAPI
 
     #region TFT-SUMMONER-V1
 
-    public static class TFTSummonerV1
-    {
-        public static string GetTFTSummonerByAccountID(Platform region, string accountID)
-        {
-            return Request($"https://{region}.api.riotgames.com/tft/summoner/v1/summoners/by-account/{accountID}?api_key=").Result;
-        }
-
-        public static string GetTFTSummonerBySummonerName(Platform region, string summonerName)
-        {
-            return Request($"https://{region}.api.riotgames.com/tft/summoner/v1/summoners/by-name/{summonerName}?api_key=").Result;
-        }
-
-        public static string GetTFTSummonerByPUUID(Platform region, string PUUID)
-        {
-            return Request($"https://{region}.api.riotgames.com/tft/summoner/v1/summoners/by-puuid/{PUUID}?api_key=").Result;
-        }
-
-        public static string GetTFTSummonerByAccessToken(Platform region, string accessToken)
-        {
-            return Request($"https://{region}.api.riotgames.com/tft/summoner/v1/summoners/me?api_key=", accessToken).Result;
-        }
-
-        public static string GetTFTSummonerBySummonerID(Platform region, string summonerID)
-        {
-            return Request($"https://{region}.api.riotgames.com/tft/summoner/v1/summoners/{summonerID}?api_key=").Result;
-        }
-    }
-
     public static class TFTSummonerV1Async
     {
-        public static async Task<string> GetTFTSummonerByAccountID(Platform region, string accountID)
+        public static async Task<string> GetTFTSummonerByAccountID(Platform platform, string accountID)
         {
-            return await Request($"https://{region}.api.riotgames.com/tft/summoner/v1/summoners/by-account/{accountID}?api_key=");
+            return await Request($"https://{platform}.api.riotgames.com/tft/summoner/v1/summoners/by-account/{accountID}?api_key=");
         }
 
-        public static async Task<string> GetTFTSummonerBySummonerName(Platform region, string summonerName)
+        public static async Task<string> GetTFTSummonerBySummonerName(Platform platform, string summonerName)
         {
-            return await Request($"https://{region}.api.riotgames.com/tft/summoner/v1/summoners/by-name/{summonerName}?api_key=");
+            return await Request($"https://{platform}.api.riotgames.com/tft/summoner/v1/summoners/by-name/{summonerName}?api_key=");
         }
 
-        public static async Task<string> GetTFTSummonerByPUUID(Platform region, string PUUID)
+        public static async Task<string> GetTFTSummonerByPUUID(Platform platform, string PUUID)
         {
-            return await Request($"https://{region}.api.riotgames.com/tft/summoner/v1/summoners/by-puuid/{PUUID}?api_key=");
+            return await Request($"https://{platform}.api.riotgames.com/tft/summoner/v1/summoners/by-puuid/{PUUID}?api_key=");
         }
 
-        public static async Task<string> GetTFTSummonerByAccessToken(Platform region, string accessToken)
+        public static async Task<string> GetTFTSummonerByAccessToken(Platform platform, string accessToken)
         {
-            return await Request($"https://{region}.api.riotgames.com/tft/summoner/v1/summoners/me?api_key=", accessToken);
+            return await Request($"https://{platform}.api.riotgames.com/tft/summoner/v1/summoners/me?api_key=", accessToken);
         }
 
-        public static async Task<string> GetTFTSummonerBySummonerID(Platform region, string summonerID)
+        public static async Task<string> GetTFTSummonerBySummonerID(Platform platform, string summonerID)
         {
-            return await Request($"https://{region}.api.riotgames.com/tft/summoner/v1/summoners/{summonerID}?api_key=");
+            return await Request($"https://{platform}.api.riotgames.com/tft/summoner/v1/summoners/{summonerID}?api_key=");
         }
-    }
-
-    #endregion
-
-    #region TOURNAMENT-STUB-V4
-
-    // Mock Endpoint
-
-    public static class TournamentStubV4
-    {
-
-    }
-
-    public static class TournamentStubV4Async
-    {
-
-    }
-
-    #endregion
-
-    #region TOURNAMENT-V4
-
-    // Don't have Access
-    public static class TournamentV4
-    {
-
-    }
-
-    public static class TournamentV4Async
-    {
-
     }
 
     #endregion
 
     #region VAL-CONTENT-V1
-
-    public static class ValContentV1
-    {
-        public static string GetContentByLocale(ValRegion region, Locale locale)
-        {
-            return Request($"https://{region}.api.riotgames.com/val/content/v1/contents?locale={ConvertLocale(locale)}&api_key=").Result;
-        }
-    }
 
     public static class ValContentV1Async
     {
@@ -1163,24 +746,6 @@ public static class RiotAPI
     #endregion
 
     #region VAL-MATCH-V1
-
-    public static class ValMatchV1
-    {
-        public static string GetValMatchByMatchID(ValRegion region, string matchID)
-        {
-            return Request($"https://{region}.api.riotgames.com/val/match/v1/matches/{matchID}?api_key=").Result;
-        }
-
-        public static string GetValMatchlistByPUUID(ValRegion region, string puuid)
-        {
-            return Request($"https://{region}.api.riotgames.com/val/match/v1/matchlists/by-puuid/{puuid}?api_key=").Result;
-        }
-
-        public static string GetValRecentMatchesByQueue(ValRegion region, ValQueue queue)
-        {
-            return Request($"https://{region}.api.riotgames.com/val/match/v1/recent-matches/by-queue/{queue}?api_key=").Result;
-        }
-    }
 
     public static class ValMatchV1Async
     {
@@ -1204,14 +769,6 @@ public static class RiotAPI
 
     #region VAL-RANKED-V1
 
-    public static class ValRankedV1
-    {
-        public static string GetValLeaderboardByAct(ValRegion region, string actID, int size = 200, int startIndex = 0)
-        {
-            return Request($"https://{region}.api.riotgames.com/val/ranked/v1/leaderboards/by-act/{actID}?size={size}&startIndex={startIndex}&api_key=").Result;
-        }
-    }
-
     public static class ValRankedV1Async
     {
         public static async Task<string> GetValLeaderboardByAct(ValRegion region, string actID, int size = 200, int startIndex = 0)
@@ -1223,14 +780,6 @@ public static class RiotAPI
     #endregion
 
     #region VAL-STATUS-V1
-
-    public static class ValStatusV1
-    {
-        public static string GetValStatus(ValRegion region)
-        {
-            return Request($"https://{region}.api.riotgames.com/val/status/v1/platform-data?api_key=").Result;
-        }
-    }
 
     public static class ValStatusV1Async
     {
