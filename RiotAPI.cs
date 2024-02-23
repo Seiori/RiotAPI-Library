@@ -891,10 +891,14 @@ public static class RiotAPI
                 queueStr = $"queue={queue}&";
             if (type != Type.None)
                 typeStr = $"type={type}&";
+            if (start < 0)
+                start = 0;
+            if (count < 0 || count > 100)
+                count = 20;
 
             try
             {
-                return JsonConvert.DeserializeObject<List<string>>(await Request($"https://{region}.api.riotgames.com/lol/match/v5/matches/by-puuid/{puuid}/ids?{startTimeStr}{endTimeStr}{queueStr}{typeStr}start={start}&count={count}0&api_key={APIKey}"))!;
+                return JsonConvert.DeserializeObject<List<string>>(await Request($"https://{region}.api.riotgames.com/lol/match/v5/matches/by-puuid/{puuid}/ids?{startTimeStr}{endTimeStr}{queueStr}{typeStr}start={start}&count={count}&api_key={APIKey}"))!;
             }
             catch (Exception ex)
             {
