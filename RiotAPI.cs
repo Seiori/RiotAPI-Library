@@ -231,7 +231,7 @@ public static class RiotAPI
 
     public static class AccountV1Async
     {
-        public static async Task<AccountDTO?> GetAccountByPUUID(Region region, string puuid)
+        public static async Task<AccountDTO?> GetAccountByPuuid(Region region, string puuid)
         {
             try
             {
@@ -243,7 +243,7 @@ public static class RiotAPI
             }
         }
 
-        public static async Task<AccountDTO?> GetAccountByRiotID(Region region, string gameName, string tagLine)
+        public static async Task<AccountDTO?> GetAccountByRiotId(Region region, string gameName, string tagLine)
         {
             try
             {
@@ -254,18 +254,6 @@ public static class RiotAPI
                 throw new Exception(ex.Message);
             }
         }
-
-        // Not Needed Yet
-        //public static async Task<string> GetActiveShardByPUUID(Region region, Game game, string puuid)
-        //{
-        //    return await Request($"https://{region}.api.riotgames.com/riot/account/v1/active-shards/by-game/{game}/by-puuid/{puuid}?api_key=");
-        //}
-
-        // Not Needed Yet
-        //public static async Task<Models.Account> GetAccountByAccessToken(Region region, string accessToken)
-        //{
-        //    return JsonConvert.DeserializeObject<Models.Account>(await Request($"https://{region}.api.riotgames.com/riot/account/v1/accounts/me?api_key=", accessToken));
-        //}
 
         public class AccountDTO
         {
