@@ -1,6 +1,7 @@
 ﻿using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using System.Net.Http.Headers;
+using System.Net;
 
 public static class RiotAPI
 {
@@ -8,147 +9,121 @@ public static class RiotAPI
 
     public enum Region
     {
-        americas,
-        asia,
-        esports,
-        europe,
-        sea
+        Americas,
+        Asia,
+        Europe,
+        Sea
     }
 
     public enum Platform
     {
+        [EnumValue("Br")]
         br1,
+        [EnumValue("Eune")]
         eun1,
+        [EnumValue("Euw")]
         euw1,
+        [EnumValue("Jp")]
         jp1,
+        [EnumValue("Kr")]
         kr,
+        [EnumValue("La1")]
         la1,
+        [EnumValue("La2")]
         la2,
+        [EnumValue("Na")]
         na1,
+        [EnumValue("Oce")]
         oc1,
+        [EnumValue("Ph")]
         ph2,
+        [EnumValue("Ru")]
         ru,
+        [EnumValue("Sg")]
         sg2,
+        [EnumValue("Th")]
         th2,
+        [EnumValue("Tr")]
         tr1,
+        [EnumValue("Tw")]
         tw2,
+        [EnumValue("Vn")]
         vn2
-    }
-
-    public enum Locale
-    {
-        cs_CZ,
-        el_GR,
-        pl_PL,
-        ro_RO,
-        hu_HU,
-        en_GB,
-        de_DE,
-        es_ES,
-        it_IT,
-        fr_FR,
-        ja_JP,
-        ko_KR,
-        es_MX,
-        es_AR,
-        pt_BR,
-        en_US,
-        en_AU,
-        ru_RU,
-        tr_TR,
-        ms_MY,
-        en_PH,
-        en_SG,
-        th_TH,
-        vn_VN,
-        id_ID,
-        zh_MY,
-        zh_CN,
-        zh_TW
     }
 
     public enum Queue
     {
+        [EnumValue("RankedSoloDuo")]
         RANKED_SOLO_5x5,
+        [EnumValue("RankedTft")]
         RANKED_TFT,
+        [EnumValue("RankedFlexSr")]
         RANKED_FLEX_SR,
+        [EnumValue("RankedFlexTt")]
         RANKED_FLEX_TT
     }
 
     public enum Tier
     {
-        IRON,
-        BRONZE,
-        SILVER,
-        GOLD,
-        PLATINUM,
-        EMERALD,
-        DIAMOND,
-        MASTER,
-        GRANDMASTER,
-        CHALLENGER
+        Iron,
+        Bronze,
+        Silver,
+        Gold,
+        Platinum,
+        Emerald,
+        Diamond,
+        Master,
+        Grandmaster,
+        Challenger
     }
 
     public enum Division
     {
+        [EnumValue("One")]
         I,
+        [EnumValue("Two")]
         II,
+        [EnumValue("Three")]
         III,
+        [EnumValue("Four")]
         IV
-    }
-
-    public enum ChallengeLevel
-    {
-        NONE,
-        IRON,
-        BRONZE,
-        SILVER,
-        GOLD,
-        PLATINUM,
-        DIAMOND,
-        MASTER,
-        GRANDMASTER,
-        CHALLENGER,
-        HIGHEST_NOT_LEADERBOARD_ONLY,
-        HIGHEST,
-        LOWEST
     }
 
     public enum State
     {
-        DISABLED,
-        HIDDEN,
-        ENABLED,
-        ARCHIVED
+        Disabled,
+        Enabled,
+        Hidden,
+        Archived
     }
 
     public enum Tracking
     {
-        LIFETIME,
-        SEASON
+        Lifetime,
+        Season
     }
 
     public enum Level
     {
-        NONE,
-        IRON,
-        BRONZE,
-        SILVER,
-        GOLD,
-        PLATINUM,
-        DIAMOND,
-        MASTER,
-        GRANDMASTER,
-        CHALLENGER,
+        None,
+        Iron,
+        Bronze,
+        Silver,
+        Gold,
+        Platinum,
+        Diamond,
+        Master,
+        Grandmaster,
+        Challenger,
     }
 
     public enum Type
     {
         None,
-        ranked,
-        normal,
-        tourney,
-        tutorial,
+        Ranked,
+        Normal,
+        Tourney,
+        Tutorial,
     }
 
     #endregion
@@ -163,70 +138,68 @@ public static class RiotAPI
 
     #region RequestMethod
 
-    public static async Task<string> Request(string APIUrl, string? accessToken = null)
+    private static async Task<string> Request(string apiUrl, string? accessToken = null)
     {
-        Client.DefaultRequestHeaders.Clear();
-
-        if (accessToken != null)
-            // Add an Authorisation header to the GET request containing the access token
-            Client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Authorization", accessToken);
-
-        HttpResponseMessage httpResponseMessage = await Client.GetAsync(APIUrl);
-
-        if (httpResponseMessage.IsSuccessStatusCode)
-            return await httpResponseMessage.Content.ReadAsStringAsync();
-        else if (httpResponseMessage.StatusCode == System.Net.HttpStatusCode.TooManyRequests && RetryFailedRequests)
+        Client.DefaultRequestHeaders.Authorization = accessToken != null ? new AuthenticationHeaderValue("Bearer", accessToken) : null;
+    
+        while (true)
         {
-            return await Request(APIUrl, accessToken);
-        }
-        else
-        {
-            throw new Exception(httpResponseMessage.ReasonPhrase);
+            var response = await Client.GetAsync(apiUrl);
+        
+            if (response.IsSuccessStatusCode)
+            {
+                return await response.Content.ReadAsStringAsync();
+            }
+            else if (RetryFailedRequests && response.StatusCode == HttpStatusCode.TooManyRequests)
+            {
+                await Task.Delay(1000);
+            }
+            else
+            {
+                throw new Exception(response.ReasonPhrase);
+            }
         }
     }
 
     #endregion
 
-    #region ConvertLocale
+    #region EnumHandling
 
-    public static string ConvertLocale(Locale locale)
+    public static Region GetRegionFromPlatform(Platform platform)
     {
-        return locale switch
+        switch (platform)
         {
-            Locale.cs_CZ => "cs-CZ",
-            Locale.el_GR => "el-GR",
-            Locale.pl_PL => "pl-PL",
-            Locale.ro_RO => "ro-RO",
-            Locale.hu_HU => "hu-HU",
-            Locale.en_GB => "en-GB",
-            Locale.de_DE => "de-DE",
-            Locale.es_ES => "es-ES",
-            Locale.it_IT => "it-IT",
-            Locale.fr_FR => "fr-FR",
-            Locale.ja_JP => "ja-JP",
-            Locale.ko_KR => "ko-KR",
-            Locale.es_MX => "es-MX",
-            Locale.es_AR => "es-AR",
-            Locale.pt_BR => "pt-BR",
-            Locale.en_US => "en-US",
-            Locale.en_AU => "en-AU",
-            Locale.ru_RU => "ru-RU",
-            Locale.tr_TR => "tr-TR",
-            Locale.ms_MY => "ms-MY",
-            Locale.en_PH => "en-PH",
-            Locale.en_SG => "en-SG",
-            Locale.th_TH => "th-TH",
-            Locale.vn_VN => "vn-VN",
-            Locale.id_ID => "id-ID",
-            Locale.zh_MY => "zh-MY",
-            Locale.zh_CN => "zh-CN",
-            Locale.zh_TW => "zh-TW",
-            _ => "en-US",
-        };
+            case Platform.br1:
+            case Platform.la1:
+            case Platform.la2:
+            case Platform.na1:
+            case Platform.oc1:
+            case Platform.ph2:
+                return Region.Americas;
+
+            case Platform.eun1:
+            case Platform.euw1:
+            case Platform.ru:
+            case Platform.tr1:
+                return Region.Europe;
+
+            case Platform.jp1:
+            case Platform.kr:
+                return Region.Asia;
+
+            case Platform.sg2:
+            case Platform.th2:
+            case Platform.tw2:
+            case Platform.vn2:
+                return Region.Sea;
+
+            default:
+                throw new Exception("Invalid platform");
+        }
     }
 
     #endregion
-
+    
     #region Account-V1
 
     public static class AccountV1Async
@@ -525,9 +498,6 @@ public static class RiotAPI
     {
         public static async Task<LeagueListDTO?> GetChallengerLeagueByQueue(Platform platform, Queue queue)
         {
-            if (queue == Queue.RANKED_TFT)
-                return null;
-
             try
             {
                 return JsonConvert.DeserializeObject<LeagueListDTO>(await Request($"https://{platform}.api.riotgames.com/lol/league/v4/challengerleagues/by-queue/{queue}?api_key={APIKey}"))!;
@@ -570,9 +540,6 @@ public static class RiotAPI
 
         public static async Task<LeagueListDTO?> GetGrandmasterLeagueByQueue(Platform platform, Queue queue)
         {
-            if (queue == Queue.RANKED_TFT)
-                return null;
-
             try
             {
                 return JsonConvert.DeserializeObject<LeagueListDTO>(await Request($"https://{platform}.api.riotgames.com/lol/league/v4/grandmasterleagues/by-queue/{queue}?api_key={APIKey}"))!;
@@ -597,9 +564,6 @@ public static class RiotAPI
 
         public static async Task<LeagueListDTO?> GetMasterLeagueByQueue(Platform platform, Queue queue)
         {
-            if (queue == Queue.RANKED_TFT)
-                return null;
-
             try
             {
                 return JsonConvert.DeserializeObject<LeagueListDTO>(await Request($"https://{platform}.api.riotgames.com/lol/league/v4/masterleagues/by-queue/{queue}?api_key={APIKey}"))!;
@@ -704,7 +668,7 @@ public static class RiotAPI
 
         public static async Task<List<ApexPlayerInfoDTO>?> GetTopPlayersForEachLevelByChallengeId(Platform platform, Level level, long challengeId, int limit = 0)
         {
-            if (level == Level.CHALLENGER || level == Level.GRANDMASTER || level == Level.MASTER)
+            if (level == Level.Challenger || level == Level.Grandmaster || level == Level.Master)
                 return null;
 
             string limitStr = "";
@@ -1311,8 +1275,6 @@ public static class RiotAPI
             }
             catch (Exception ex)
             {
-                // Check Status Code
-
                 throw new Exception(ex.Message);
             }
         }
@@ -1330,4 +1292,24 @@ public static class RiotAPI
     }
 
     #endregion
+}
+
+[AttributeUsage(AttributeTargets.Field)]
+internal class EnumValueAttribute(string value) : Attribute
+{
+    public string Value { get; } = value;
+}
+
+public static class EnumExtensions
+{
+    public static string GetEnumValue(this Enum value)
+    {
+        var field = value.GetType().GetField(value.ToString());
+        
+        if (field == null) return value.ToString();
+        
+        var attribute = (EnumValueAttribute)Attribute.GetCustomAttribute(field, typeof(EnumValueAttribute))!;
+        
+        return attribute?.Value ?? value.ToString();
+    }
 }
